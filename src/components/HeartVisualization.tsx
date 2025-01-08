@@ -41,16 +41,16 @@ export function HeartVisualization() {
   }, []);
 
   return (
-    <div className="relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-medical-red/20 to-medical-red rounded-full animate-heart-beat"></div>
+    <div className="relative p-8">
+      <div className="absolute inset-0 bg-gradient-to-br from-medical-red/20 to-medical-red/10 rounded-full animate-heart-beat"></div>
       <img
-        src="/lovable-uploads/e58ea4a9-5bfd-4be2-8fd3-785b7d483d34.png"
+        src="/lovable-uploads/985ad949-827d-43b3-ab30-bc451e0636b0.png"
         alt="Heart"
-        className="w-96 h-96 object-contain relative z-10"
+        className="w-full h-full object-contain relative z-10 max-w-[400px] mx-auto"
       />
-      <div className="absolute bottom-0 left-0 bg-white p-4 rounded-xl shadow-lg">
+      <div className="absolute bottom-4 left-4 bg-white p-4 rounded-xl shadow-lg">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-4 h-4 bg-medical-blue rounded-full"></div>
+          <div className="w-3 h-3 bg-medical-blue rounded-full"></div>
           <span className="text-sm font-medium">Heart Rate</span>
         </div>
         <div className="text-2xl font-bold mb-2">120 bpm</div>
