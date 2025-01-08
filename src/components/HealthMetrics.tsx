@@ -54,40 +54,56 @@ function MetricCard({ title, value, icon: Icon, graphColor }: typeof metrics[0])
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const getWavePattern = (x: number, offset: number) => {
+      switch (title) {
+        case "Blood Status":
+          // Gentle, smooth wave
+          return Math.sin(x * 0.03 + offset) * 8;
+        case "Heart Rate":
+          // Sharp peaks for heartbeat
+          const t = x * 0.02 + offset;
+          return (
+            Math.sin(t) * 10 +
+            Math.sin(t * 2) * 5 * Math.cos(t * 0.5)
+          );
+        case "Blood Count":
+          // Slightly irregular wave
+          return (
+            Math.sin(x * 0.04 + offset) * 7 +
+            Math.sin(x * 0.02 + offset) * 3
+          );
+        case "Glucose Level":
+          // Very gentle, long wave
+          return Math.sin(x * 0.02 + offset) * 6;
+        default:
+          return 0;
+      }
+    };
+
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Set up the line style
       ctx.strokeStyle = graphColor;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.5;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
-      // Draw multiple waves for continuous animation
-      for (let i = -1; i < 2; i++) {
-        ctx.beginPath();
+      ctx.beginPath();
+      
+      for (let x = 0; x <= canvas.width; x++) {
+        const y = canvas.height / 2 + getWavePattern(x, offsetRef.current);
         
-        for (let x = 0; x <= canvas.width; x++) {
-          const frequency = title === "Heart Rate" ? 0.05 : 0.02;
-          const amplitude = title === "Heart Rate" ? 20 : 15;
-          
-          const y = canvas.height / 2 + 
-            Math.sin((x + offsetRef.current) * frequency) * amplitude +
-            (title === "Heart Rate" ? 
-              Math.sin((x + offsetRef.current) * 0.1) * 5 : 0);
-          
-          if (x === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
+        if (x === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
         }
-        
-        ctx.stroke();
       }
+      
+      ctx.stroke();
 
-      // Update offset for animation
-      offsetRef.current += 2;
+      // Slower animation speed for more natural movement
+      offsetRef.current += 0.05;
       if (offsetRef.current > 1000) offsetRef.current = 0;
 
       animationFrameRef.current = requestAnimationFrame(animate);
