@@ -44,8 +44,8 @@ export function HeartVisualization() {
     <div className="relative p-8">
       <div className="absolute inset-0 bg-gradient-to-br from-medical-red/20 to-medical-red/10 rounded-full animate-heart-beat"></div>
       <img
-        src="/lovable-uploads/985ad949-827d-43b3-ab30-bc451e0636b0.png"
-        alt="Heart"
+        src="/lovable-uploads/29022270-8875-4f2d-83e8-0cb85358ad24.png"
+        alt="Anatomical Heart"
         className="w-full h-full object-contain relative z-10 max-w-[400px] mx-auto"
       />
       <div className="absolute bottom-4 left-4 bg-white p-4 rounded-xl shadow-lg">
