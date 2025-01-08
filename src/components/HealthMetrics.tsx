@@ -1,6 +1,6 @@
 import { Activity, Droplet, LineChart, List } from "lucide-react";
 import { Card } from "./ui/card";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const metrics = [
   {
@@ -46,6 +46,7 @@ function MetricCard({ title, value, icon: Icon, graphColor }: typeof metrics[0])
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number>();
   const offsetRef = useRef(0);
+  const [heartRate, setHeartRate] = useState(120);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -54,35 +55,46 @@ function MetricCard({ title, value, icon: Icon, graphColor }: typeof metrics[0])
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const getWavePattern = (x: number, offset: number) => {
-      switch (title) {
-        case "Blood Status":
-          // Gentle, smooth wave
-          return Math.sin(x * 0.03 + offset) * 8;
-        case "Heart Rate":
-          // Sharp peaks for heartbeat
-          const t = x * 0.02 + offset;
-          return (
-            Math.sin(t) * 10 +
-            Math.sin(t * 2) * 5 * Math.cos(t * 0.5)
-          );
-        case "Blood Count":
-          // Slightly irregular wave
-          return (
-            Math.sin(x * 0.04 + offset) * 7 +
-            Math.sin(x * 0.02 + offset) * 3
-          );
-        case "Glucose Level":
-          // Very gentle, long wave
-          return Math.sin(x * 0.02 + offset) * 6;
-        default:
-          return 0;
-      }
-    };
+    if (title === "Heart Rate") {
+      // Only animate Heart Rate
+      const animate = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.strokeStyle = graphColor;
+        ctx.lineWidth = 1.5;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
 
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
+        ctx.beginPath();
+        
+        for (let x = 0; x <= canvas.width; x++) {
+          const t = x * 0.05 + offsetRef.current;
+          const y = canvas.height / 2 + 
+            (Math.sin(t) * 8 + Math.sin(t * 2) * 4 * Math.cos(t * 0.5));
+          
+          if (x === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        
+        ctx.stroke();
+
+        offsetRef.current += 0.1;
+        if (offsetRef.current > 1000) offsetRef.current = 0;
+
+        // Update heart rate randomly every few seconds
+        if (Math.random() < 0.02) {
+          setHeartRate(prev => Math.floor(Math.random() * (125 - 115) + 115));
+        }
+
+        animationFrameRef.current = requestAnimationFrame(animate);
+      };
+
+      animate();
+    } else {
+      // Static graphs for other metrics
       ctx.strokeStyle = graphColor;
       ctx.lineWidth = 1.5;
       ctx.lineCap = "round";
@@ -91,7 +103,20 @@ function MetricCard({ title, value, icon: Icon, graphColor }: typeof metrics[0])
       ctx.beginPath();
       
       for (let x = 0; x <= canvas.width; x++) {
-        const y = canvas.height / 2 + getWavePattern(x, offsetRef.current);
+        let y;
+        switch (title) {
+          case "Blood Status":
+            y = canvas.height / 2 + Math.sin(x * 0.03) * 8;
+            break;
+          case "Blood Count":
+            y = canvas.height / 2 + Math.sin(x * 0.04) * 7;
+            break;
+          case "Glucose Level":
+            y = canvas.height / 2 + Math.sin(x * 0.02) * 6;
+            break;
+          default:
+            y = canvas.height / 2;
+        }
         
         if (x === 0) {
           ctx.moveTo(x, y);
@@ -101,15 +126,7 @@ function MetricCard({ title, value, icon: Icon, graphColor }: typeof metrics[0])
       }
       
       ctx.stroke();
-
-      // Slower animation speed for more natural movement
-      offsetRef.current += 0.05;
-      if (offsetRef.current > 1000) offsetRef.current = 0;
-
-      animationFrameRef.current = requestAnimationFrame(animate);
-    };
-
-    animate();
+    }
 
     return () => {
       if (animationFrameRef.current) {
@@ -127,7 +144,9 @@ function MetricCard({ title, value, icon: Icon, graphColor }: typeof metrics[0])
           </div>
           <div className="flex flex-col">
             <span className="text-sm text-gray-500">{title}</span>
-            <span className="text-lg font-semibold">{value}</span>
+            <span className="text-lg font-semibold">
+              {title === "Heart Rate" ? `${heartRate} bpm` : value}
+            </span>
           </div>
         </div>
       </div>
