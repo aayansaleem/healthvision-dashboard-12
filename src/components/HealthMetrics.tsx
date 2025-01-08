@@ -44,6 +44,8 @@ export function HealthMetrics() {
 
 function MetricCard({ title, value, icon: Icon, graphColor }: typeof metrics[0]) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationFrameRef = useRef<number>();
+  const offsetRef = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -52,52 +54,52 @@ function MetricCard({ title, value, icon: Icon, graphColor }: typeof metrics[0])
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Set up the line style
-    ctx.strokeStyle = graphColor;
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-
-    // Generate smooth curve points
-    const points: [number, number][] = [];
-    const numPoints = 50;
-    for (let i = 0; i < numPoints; i++) {
-      const x = (canvas.width * i) / (numPoints - 1);
-      let y;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      if (title === "Heart Rate") {
-        // Create heart rate pattern
-        const t = i / (numPoints - 1);
-        y = canvas.height / 2 + Math.sin(t * Math.PI * 8) * 20 * (1 - Math.abs(Math.sin(t * Math.PI * 2)));
-      } else {
-        // Create smooth wave pattern for other metrics
-        y = canvas.height / 2 + Math.sin(i * 0.5) * 10;
+      // Set up the line style
+      ctx.strokeStyle = graphColor;
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      // Draw multiple waves for continuous animation
+      for (let i = -1; i < 2; i++) {
+        ctx.beginPath();
+        
+        for (let x = 0; x <= canvas.width; x++) {
+          const frequency = title === "Heart Rate" ? 0.05 : 0.02;
+          const amplitude = title === "Heart Rate" ? 20 : 15;
+          
+          const y = canvas.height / 2 + 
+            Math.sin((x + offsetRef.current) * frequency) * amplitude +
+            (title === "Heart Rate" ? 
+              Math.sin((x + offsetRef.current) * 0.1) * 5 : 0);
+          
+          if (x === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        
+        ctx.stroke();
       }
-      points.push([x, y]);
-    }
 
-    // Draw the smooth curve
-    ctx.beginPath();
-    ctx.moveTo(points[0][0], points[0][1]);
-    
-    for (let i = 1; i < points.length - 2; i++) {
-      const xc = (points[i][0] + points[i + 1][0]) / 2;
-      const yc = (points[i][1] + points[i + 1][1]) / 2;
-      ctx.quadraticCurveTo(points[i][0], points[i][1], xc, yc);
-    }
-    
-    ctx.stroke();
+      // Update offset for animation
+      offsetRef.current += 2;
+      if (offsetRef.current > 1000) offsetRef.current = 0;
 
-    // Add dot at the end for Glucose Level and Blood Count
-    if (title === "Glucose Level" || title === "Blood Count") {
-      ctx.beginPath();
-      ctx.arc(canvas.width - 20, canvas.height / 2, 3, 0, Math.PI * 2);
-      ctx.fillStyle = graphColor;
-      ctx.fill();
-    }
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
   }, [title, graphColor]);
 
   return (
@@ -113,7 +115,7 @@ function MetricCard({ title, value, icon: Icon, graphColor }: typeof metrics[0])
           </div>
         </div>
       </div>
-      <div className="h-16 relative">
+      <div className="h-16 relative overflow-hidden">
         <canvas
           ref={canvasRef}
           width={200}

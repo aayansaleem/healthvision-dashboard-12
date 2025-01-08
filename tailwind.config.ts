@@ -18,6 +18,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Raleway', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -68,10 +71,15 @@ export default {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-100%)" },
         },
+        "wave": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-100%)" },
+        }
       },
       animation: {
         "heart-beat": "heart-beat 2s infinite",
         "heart-rate": "heart-rate 5s linear infinite",
+        "wave": "wave 3s linear infinite",
       },
     },
   },
